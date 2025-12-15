@@ -67,18 +67,53 @@ final class SocialiteController
             $this->session->set('socialite_user', $user->toArray());
             $this->session->set('socialite_provider', $provider);
 
-            // Redirect to application's callback handler
+            // Validate and redirect to application's callback handler
             $redirectUrl = $request->input('redirect') ?? '/auth/socialite/success';
+            $redirectUrl = $this->validateRedirectUrl($redirectUrl, '/auth/socialite/success');
 
             return new RedirectResponse($redirectUrl);
         } catch (\Throwable $e) {
-            // Redirect to error page
+            // Validate and redirect to error page
             $redirectUrl = $request->input('redirect_error') ?? '/auth/socialite/error';
+            $redirectUrl = $this->validateRedirectUrl($redirectUrl, '/auth/socialite/error');
 
             $this->session->set('socialite_error', $e->getMessage());
 
             return new RedirectResponse($redirectUrl);
         }
+    }
+
+    /**
+     * Validate redirect URL to prevent open redirect attacks.
+     *
+     * Only allows:
+     * 1. Relative URLs starting with / (but not //)
+     * 2. Whitelisted domains from config
+     *
+     * @param string $url URL to validate
+     * @param string $fallback Fallback URL if validation fails
+     * @return string Validated URL or fallback
+     */
+    private function validateRedirectUrl(string $url, string $fallback): string
+    {
+        // Allow relative URLs starting with / (but not // which is protocol-relative)
+        if (str_starts_with($url, '/') && !str_starts_with($url, '//')) {
+            return $url;
+        }
+
+        // Check against whitelist of allowed domains
+        $parsed = parse_url($url);
+        if ($parsed === false || !isset($parsed['host'])) {
+            return $fallback;
+        }
+
+        $allowedDomains = config('socialite.allowed_redirect_domains', []);
+        if (in_array($parsed['host'], $allowedDomains, true)) {
+            return $url;
+        }
+
+        // If URL doesn't match any criteria, return fallback
+        return $fallback;
     }
 }
 

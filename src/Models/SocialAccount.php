@@ -43,6 +43,8 @@ final class SocialAccount extends Model
     protected $casts = [
         'provider_expires_at' => 'datetime',
         'metadata' => 'array',
+        'provider_token' => 'encrypted',
+        'provider_refresh_token' => 'encrypted',
     ];
 
     /**
@@ -67,6 +69,30 @@ final class SocialAccount extends Model
         return static::where('provider', $provider)
             ->where('provider_id', $providerId)
             ->first();
+    }
+
+    /**
+     * Check if the access token is expired.
+     *
+     * @return bool
+     */
+    public function isTokenExpired(): bool
+    {
+        if ($this->provider_expires_at === null) {
+            return false;
+        }
+
+        return now()->greaterThan($this->provider_expires_at);
+    }
+
+    /**
+     * Check if a refresh token is available.
+     *
+     * @return bool
+     */
+    public function hasRefreshToken(): bool
+    {
+        return !empty($this->provider_refresh_token);
     }
 }
 

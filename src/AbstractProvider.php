@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Toporia\Socialite;
 
 use Toporia\Socialite\Contracts\ProviderInterface;
+use Toporia\Socialite\Exceptions\{InvalidStateException, TokenExchangeException, UserDataException};
 use Toporia\Framework\Http\{Request, Contracts\HttpClientInterface};
 use Toporia\Framework\Session\Store;
 use Toporia\Framework\Support\Str;
@@ -75,13 +76,13 @@ abstract class AbstractProvider implements ProviderInterface
         // Verify state
         $state = $request->input('state');
         if (!$this->verifyState($state)) {
-            throw new \RuntimeException('Invalid state parameter');
+            throw new InvalidStateException('Invalid or missing state parameter. This may indicate a CSRF attack or session issue.');
         }
 
         // Get authorization code
         $code = $request->input('code');
         if ($code === null) {
-            throw new \RuntimeException('Authorization code not provided');
+            throw new TokenExchangeException('Authorization code not provided by OAuth provider.');
         }
 
         // Exchange code for token
@@ -116,12 +117,25 @@ abstract class AbstractProvider implements ProviderInterface
             ]);
 
         if (!$response->successful()) {
-            throw new \RuntimeException('Failed to exchange code for token: ' . $response->body());
+            // Log full details privately for debugging
+            if (function_exists('log_error')) {
+                log_error('OAuth token exchange failed', [
+                    'status_code' => $response->status(),
+                    'response_body' => $response->body(),
+                    'provider' => static::class,
+                ]);
+            }
+
+            throw TokenExchangeException::fromStatusCode($response->status());
         }
 
         $data = $response->json();
 
-        return $data['access_token'] ?? throw new \RuntimeException('Access token not found in response');
+        if (!isset($data['access_token'])) {
+            throw new TokenExchangeException('Access token not found in provider response.');
+        }
+
+        return $data['access_token'];
     }
 
     /**
@@ -138,7 +152,16 @@ abstract class AbstractProvider implements ProviderInterface
             ->get($this->getUserUrl());
 
         if (!$response->successful()) {
-            throw new \RuntimeException('Failed to get user data: ' . $response->body());
+            // Log full details privately for debugging
+            if (function_exists('log_error')) {
+                log_error('OAuth user data fetch failed', [
+                    'status_code' => $response->status(),
+                    'response_body' => $response->body(),
+                    'provider' => static::class,
+                ]);
+            }
+
+            throw UserDataException::fromStatusCode($response->status());
         }
 
         return $response->json();

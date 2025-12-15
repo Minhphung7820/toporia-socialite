@@ -52,4 +52,23 @@ return [
             'user:email',
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Security Settings
+    |--------------------------------------------------------------------------
+    */
+
+    // Allowed domains for redirect after OAuth callback (open redirect protection)
+    // Only URLs from these domains will be allowed, in addition to relative URLs
+    'allowed_redirect_domains' => array_filter(explode(',', env('SOCIALITE_ALLOWED_REDIRECT_DOMAINS', ''))),
+
+    // Token encryption - encrypt tokens before storing in database
+    'encrypt_tokens' => env('SOCIALITE_ENCRYPT_TOKENS', true),
+
+    // Token refresh - automatically refresh expired tokens
+    'auto_refresh_tokens' => env('SOCIALITE_AUTO_REFRESH_TOKENS', true),
+
+    // Stateless mode - don't use session storage for state parameter
+    'stateless' => env('SOCIALITE_STATELESS', false),
 ];

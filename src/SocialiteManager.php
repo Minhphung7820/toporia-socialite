@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Toporia\Socialite;
 
 use Toporia\Socialite\Contracts\ProviderInterface;
+use Toporia\Socialite\Exceptions\ProviderException;
 use Toporia\Framework\Http\Contracts\HttpClientInterface;
 use Toporia\Framework\Container\Contracts\ContainerInterface;
 
@@ -91,7 +92,7 @@ final class SocialiteManager
             'google' => new Providers\GoogleProvider($clientId, $clientSecret, $redirectUrl, $this->httpClient, $scopes),
             'facebook' => new Providers\FacebookProvider($clientId, $clientSecret, $redirectUrl, $this->httpClient, $scopes),
             'github' => new Providers\GitHubProvider($clientId, $clientSecret, $redirectUrl, $this->httpClient, $scopes),
-            default => throw new \InvalidArgumentException("Unsupported provider: {$provider}"),
+            default => throw new ProviderException("Unsupported OAuth provider: {$provider}. Supported providers: google, facebook, github."),
         };
     }
 
