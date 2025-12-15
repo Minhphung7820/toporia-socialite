@@ -66,6 +66,16 @@ final class TwitterProvider extends AbstractProvider
     /**
      * {@inheritdoc}
      */
+    public function getUserFromToken(string $token): User
+    {
+        $user = $this->getUserData($token);
+
+        return $this->mapUserToObject($user);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     protected function formatScopes(): string
     {
         // Twitter uses space-separated scopes
