@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Toporia\Socialite;
 
-use Toporia\Socialite\Contracts\ProviderInterface;
+use Toporia\Socialite\Contracts\{ProviderInterface, RefreshableProviderInterface};
 use Toporia\Socialite\Exceptions\{InvalidStateException, TokenExchangeException, UserDataException};
 use Toporia\Framework\Http\{Request, Contracts\HttpClientInterface};
 use Toporia\Framework\Session\Store;
@@ -30,8 +30,13 @@ use Toporia\Framework\Support\Str;
  *
  * @link        https://github.com/Minhphung7820/toporia
  */
-abstract class AbstractProvider implements ProviderInterface
+abstract class AbstractProvider implements ProviderInterface, RefreshableProviderInterface
 {
+    /**
+     * Whether to use stateless mode (no session storage).
+     */
+    protected bool $stateless = false;
+
     /**
      * @param string $clientId OAuth client ID
      * @param string $clientSecret OAuth client secret
@@ -46,6 +51,36 @@ abstract class AbstractProvider implements ProviderInterface
         protected HttpClientInterface $httpClient,
         protected array $scopes = []
     ) {}
+
+    /**
+     * {@inheritdoc}
+     */
+    public function refreshToken(string $refreshToken): array
+    {
+        $response = $this->httpClient
+            ->asForm()
+            ->post($this->getTokenUrl(), [
+                'client_id' => $this->clientId,
+                'client_secret' => $this->clientSecret,
+                'refresh_token' => $refreshToken,
+                'grant_type' => 'refresh_token',
+            ]);
+
+        if (!$response->successful()) {
+            // Log full details privately for debugging
+            if (function_exists('log_error')) {
+                log_error('OAuth token refresh failed', [
+                    'status_code' => $response->status(),
+                    'response_body' => $response->body(),
+                    'provider' => static::class,
+                ]);
+            }
+
+            throw TokenExchangeException::fromStatusCode($response->status());
+        }
+
+        return $response->json();
+    }
 
     /**
      * {@inheritdoc}
@@ -73,10 +108,12 @@ abstract class AbstractProvider implements ProviderInterface
      */
     public function getAccessToken(Request $request): string
     {
-        // Verify state
-        $state = $request->input('state');
-        if (!$this->verifyState($state)) {
-            throw new InvalidStateException('Invalid or missing state parameter. This may indicate a CSRF attack or session issue.');
+        // Verify state (skip in stateless mode)
+        if (!$this->stateless) {
+            $state = $request->input('state');
+            if (!$this->verifyState($state)) {
+                throw new InvalidStateException('Invalid or missing state parameter. This may indicate a CSRF attack or session issue.');
+            }
         }
 
         // Get authorization code
@@ -87,6 +124,20 @@ abstract class AbstractProvider implements ProviderInterface
 
         // Exchange code for token
         return $this->exchangeCodeForToken($code);
+    }
+
+    /**
+     * Enable stateless mode (no session state verification).
+     *
+     * Warning: Only use this for server-to-server flows or when CSRF protection
+     * is handled elsewhere. Not recommended for browser-based flows.
+     *
+     * @return self
+     */
+    public function stateless(): self
+    {
+        $this->stateless = true;
+        return $this;
     }
 
     /**

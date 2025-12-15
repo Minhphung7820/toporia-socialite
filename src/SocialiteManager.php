@@ -92,7 +92,9 @@ final class SocialiteManager
             'google' => new Providers\GoogleProvider($clientId, $clientSecret, $redirectUrl, $this->httpClient, $scopes),
             'facebook' => new Providers\FacebookProvider($clientId, $clientSecret, $redirectUrl, $this->httpClient, $scopes),
             'github' => new Providers\GitHubProvider($clientId, $clientSecret, $redirectUrl, $this->httpClient, $scopes),
-            default => throw new ProviderException("Unsupported OAuth provider: {$provider}. Supported providers: google, facebook, github."),
+            'twitter' => new Providers\TwitterProvider($clientId, $clientSecret, $redirectUrl, $this->httpClient, $scopes),
+            'linkedin' => new Providers\LinkedInProvider($clientId, $clientSecret, $redirectUrl, $this->httpClient, $scopes),
+            default => throw new ProviderException("Unsupported OAuth provider: {$provider}. Supported providers: google, facebook, github, twitter, linkedin."),
         };
     }
 

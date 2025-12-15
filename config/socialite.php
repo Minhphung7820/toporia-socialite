@@ -55,6 +55,37 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Twitter/X OAuth 2.0
+    |--------------------------------------------------------------------------
+    */
+    'twitter' => [
+        'client_id' => env('TWITTER_CLIENT_ID', ''),
+        'client_secret' => env('TWITTER_CLIENT_SECRET', ''),
+        'redirect' => env('TWITTER_REDIRECT_URI', '/auth/socialite/twitter/callback'),
+        'scopes' => [
+            'tweet.read',
+            'users.read',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | LinkedIn OAuth
+    |--------------------------------------------------------------------------
+    */
+    'linkedin' => [
+        'client_id' => env('LINKEDIN_CLIENT_ID', ''),
+        'client_secret' => env('LINKEDIN_CLIENT_SECRET', ''),
+        'redirect' => env('LINKEDIN_REDIRECT_URI', '/auth/socialite/linkedin/callback'),
+        'scopes' => [
+            'openid',
+            'profile',
+            'email',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Security Settings
     |--------------------------------------------------------------------------
     */
