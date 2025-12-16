@@ -62,7 +62,21 @@ OAuth social authentication package for Toporia Framework with support for Googl
 composer require toporia/socialite
 ```
 
-### 2. Publish Configuration
+### 2. Auto-Discovery
+
+This package uses Toporia's **Package Auto-Discovery** system. After installation:
+
+- **Service Provider** is automatically registered - no manual registration required
+- **Configuration** is automatically discovered from `extra.toporia.config` in composer.json
+- **Migrations** are automatically included when running `php console migrate`
+
+To rebuild the package manifest manually:
+
+```bash
+php console package:discover
+```
+
+### 3. Publish Configuration (Optional)
 
 ```bash
 php console vendor:publish --provider="Toporia\Socialite\SocialiteServiceProvider"
@@ -70,15 +84,16 @@ php console vendor:publish --provider="Toporia\Socialite\SocialiteServiceProvide
 
 This publishes `config/socialite.php` to your application.
 
-### 3. Run Migrations
+### 4. Run Migrations
 
 ```bash
 php console migrate
 ```
 
 This creates the `social_accounts` table for linking OAuth accounts to users.
+Package migrations are automatically discovered and included.
 
-### 4. Configure OAuth Providers
+### 5. Configure OAuth Providers
 
 Add to your `.env` file:
 
