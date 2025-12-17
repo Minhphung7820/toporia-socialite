@@ -71,7 +71,15 @@ final class SocialiteServiceProvider extends ServiceProvider
      */
     public function boot(ContainerInterface $container): void
     {
-        // Socialite services are ready
+        // Publish routes
+        $this->publishes([
+            __DIR__ . '/../routes/socialite.php' => 'routes/socialite.php',
+        ], 'socialite-routes');
+
+        // Publish config
+        $this->publishes([
+            __DIR__ . '/../config/socialite.php' => 'config/socialite.php',
+        ], 'socialite-config');
     }
 }
 
