@@ -116,4 +116,3 @@ final class SocialiteController
         return $fallback;
     }
 }
-

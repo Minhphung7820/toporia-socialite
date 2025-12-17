@@ -26,6 +26,13 @@
         "toporia": {
             "providers": [
                 "Toporia\\Socialite\\SocialiteServiceProvider"
+            ],
+            "routes": [
+                {
+                    "path": "routes/socialite.php",
+                    "middleware": ["web"],
+                    "namespace": "Toporia\\Socialite\\Controllers"
+                }
             ]
         }
     },
